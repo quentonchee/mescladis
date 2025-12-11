@@ -2,6 +2,16 @@
 session_start();
 require_once __DIR__ . '/../models/User.php';
 
+function get_relative_root()
+{
+    // Simple heuristic: if we are in an 'admin' folder, go up one level.
+    // Adjust this if you have deeper nesting.
+    if (strpos($_SERVER['SCRIPT_NAME'], '/admin/') !== false) {
+        return '../';
+    }
+    return '';
+}
+
 function login($email, $password)
 {
     $userModel = new User();
@@ -17,7 +27,7 @@ function login($email, $password)
 function logout()
 {
     session_destroy();
-    header("Location: /login.php");
+    header("Location: " . get_relative_root() . "login.php");
     exit;
 }
 
@@ -33,7 +43,7 @@ function current_user()
 function require_login()
 {
     if (!current_user()) {
-        header("Location: /login.php");
+        header("Location: " . get_relative_root() . "login.php");
         exit;
     }
 }
@@ -41,26 +51,14 @@ function require_login()
 function require_admin()
 {
     $user = current_user();
-    // This is a simplified check. In a full implementation we'd check the many-to-many Roles.
-    // However, the seed data also puts 'ADMIN' in the legacy `role` column, so we check that first for simplicity.
-    // Or we can query the _RoleToUser table.
 
-    // For now, let's assume if role column has 'ADMIN' or if we implement the join check later.
-    // The seed data set both: role: 'ADMIN' and connected relations.
     if (!$user) {
-        header("Location: /login.php");
+        header("Location: " . get_relative_root() . "login.php");
         exit;
     }
 
-    // Simple check on legacy column for now as per seed
-    // "role: 'ADMIN', // Legacy field"
-    /* 
-       Wait, let's be more robust. The seed sets:
-       role: 'ADMIN' 
-    */
     if ($user['role'] !== 'ADMIN') {
         // TODO: Check relation tables if legacy column is empty
-        // For now, this is enough for the seed admin.
         echo "Access Denied";
         exit;
     }
