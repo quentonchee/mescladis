@@ -12,7 +12,7 @@ try {
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             name TEXT,
-            roles TEXT, -- Legacy role field, likely not used but present in schema
+            role TEXT, -- Fixed from 'roles' to 'role' to match code expectations
             instrument TEXT,
             membershipNumber TEXT,
             image TEXT,
@@ -69,7 +69,7 @@ try {
             eventId TEXT NOT NULL,
             status TEXT NOT NULL,
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-             FOREIGN KEY (userId) REFERENCES User(id),
+            FOREIGN KEY (userId) REFERENCES User(id),
             FOREIGN KEY (eventId) REFERENCES Event(id)
         )",
         "CREATE TABLE IF NOT EXISTS ProfileChangeRequest (
@@ -109,8 +109,9 @@ try {
         $userId = uniqid('user_');
         $password = password_hash('admin123', PASSWORD_DEFAULT); // Using PHP default bcrypt
 
-        $stmt = $db->prepare("INSERT INTO User (id, email, password, name, mustChangePassword) VALUES (?, ?, ?, ?, 0)");
-        $stmt->execute([$userId, 'admin@example.com', $password, 'Admin User']);
+        // FIX: Insert 'ADMIN' into 'role' column so simple checks work
+        $stmt = $db->prepare("INSERT INTO User (id, email, password, name, role, mustChangePassword) VALUES (?, ?, ?, ?, ?, 0)");
+        $stmt->execute([$userId, 'admin@example.com', $password, 'Admin User', 'ADMIN']);
 
         // Link Role to User (in _RoleToUser pivot table)
         $stmt = $db->prepare("INSERT INTO _RoleToUser (A, B) VALUES (?, ?)");
